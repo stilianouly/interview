@@ -1,24 +1,24 @@
 package forex.services.rates.interpreters
 
 import cats.Applicative
-import cats.effect.Sync
 import cats.implicits.toFunctorOps
 import forex.domain.Rate
-import forex.services.rates.Converters._
 import forex.repository.oneframe.Protocol._
 import forex.services.rates.Algebra
 import forex.services.rates.errors._
+import forex.services.rates.Converters._
 
-class OneFrameRateInterpreter[F[_]: Applicative : Sync](getOneFrameData: Rate.Pair => F[List[OneFrameRateResponseData]]) extends Algebra[F] {
+class OneFrameRateInterpreter[F[_]: Applicative](getOneFrameData: Rate.Pair => F[List[OneFrameRateResponseData]]) extends Algebra[F] {
 
   override def get(pair: Rate.Pair): F[Error Either Rate] = {
 
-    val oneFrameResponse: F[List[OneFrameRateResponseData]] = getOneFrameData(pair)
+    val oneFrameResponseProgram : F[List[OneFrameRateResponseData]] = getOneFrameData(pair)
 
-    //Check if returned list is empty
-    //Check if external F fails
-    //Cache?
+    oneFrameResponseProgram.map(getFirstItemOrFail(_).map(_.asRate))
+  }
 
-    oneFrameResponse.map(oneFrameRateResponseDatas => Right(oneFrameRateResponseDatas.map(_.asRate).head))
+  private def getFirstItemOrFail[A](list: List[A]): Error Either A = {
+    val element = (list.headOption.toRight(Error.OneFrameResponseEmpty("OneFrame returned an empty data set")))
+    element
   }
 }
