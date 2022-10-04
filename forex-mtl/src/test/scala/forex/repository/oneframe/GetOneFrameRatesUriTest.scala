@@ -2,11 +2,13 @@ package forex.repository.oneframe
 
 import forex.domain.Currency
 
-class GetOneFrameRatesUriTest extends org.scalatest.funsuite.AnyFunSuite {
+class GetOneFrameRatesUriTest extends org.scalatest.funspec.AnyFunSpec {
 
-  test("GetOneFrameRatesUri should construct a uri") {
-    val result = GetOneFrameRatesUri("hi.com", "8080", Currency.CAD, Currency.AUD)
+  describe("GetOneFrameRatesUri") {
+    it("Should construct a OneFrame compatible uri") {
+      val result = GetOneFrameRatesUri("oneframe.com", "8080", Currency.CAD, Currency.AUD)
 
-    assert(result.renderString === "hi.com:8080/rates?pair=CADAUD")
+      assert(result.renderString === "oneframe.com:8080/rates?pair=CADAUD")
+    }
   }
 }

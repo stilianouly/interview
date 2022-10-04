@@ -4,7 +4,7 @@ import io.circe.parser
 
 import java.time.OffsetDateTime
 
-class ProtocolTest extends org.scalatest.funsuite.AnyFunSuite {
+class ProtocolTest extends org.scalatest.funspec.AnyFunSpec {
 
   val examplePayload = """[
     {
@@ -29,13 +29,13 @@ class ProtocolTest extends org.scalatest.funsuite.AnyFunSuite {
       )
     )
 
-  test("Should decode a list of valid OneFrame rate response data") {
+  describe("oneFrameRateResponseDataDecoder") {
+    it("Should decode a list of valid OneFrame rate response data") {
 
-    println(examplePayload)
+      val result = parser.decode[List[OneFrameRateResponseData]](examplePayload)
 
-    val result = parser.decode[List[OneFrameRateResponseData]](examplePayload)
+      assert(result === Right(exampleRate))
 
-    assert(result === Right(exampleRate))
-
+    }
   }
 }
