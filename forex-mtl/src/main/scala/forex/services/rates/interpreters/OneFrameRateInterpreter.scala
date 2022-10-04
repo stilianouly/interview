@@ -5,8 +5,8 @@ import cats.implicits.toFunctorOps
 import forex.domain.Rate
 import forex.repository.oneframe.Protocol._
 import forex.services.rates.Algebra
-import forex.services.rates.errors._
 import forex.services.rates.Converters._
+import forex.services.rates.errors._
 
 class OneFrameRateInterpreter[F[_]: Applicative](getOneFrameData: Rate.Pair => F[List[OneFrameRateResponseData]]) extends Algebra[F] {
 
