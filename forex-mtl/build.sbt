@@ -46,6 +46,8 @@ scalacOptions ++= Seq(
   "-Ycache-macro-class-loader:last-modified" // and macro definitions. This can lead to performance improvements.
 )
 
+Test / parallelExecution := false
+
 resolvers +=
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
@@ -64,6 +66,7 @@ libraryDependencies ++= Seq(
   Libraries.circeParser,
   Libraries.pureConfig,
   Libraries.logback,
+  Libraries.scalaCache,
   Libraries.scalaTest        % Test,
   Libraries.scalaCheck       % Test,
   Libraries.catsScalaCheck   % Test,
