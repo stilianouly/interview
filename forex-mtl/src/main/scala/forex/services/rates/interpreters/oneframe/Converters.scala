@@ -1,12 +1,13 @@
-package forex.services.rates
+package forex.services.rates.interpreters.oneframe
 
 import forex.domain.Rate.Pair
 import forex.domain.{ Currency, Price, Rate, Timestamp }
-import forex.repository.oneframe.Protocol.OneFrameRateResponseData
+import forex.services.rates.interpreters.oneframe.Protocol.OneFrameRateResponseData
 
 object Converters {
 
-  private[rates] implicit class OneFrameRateResponseDataOps(val oneFrameRateResponseData: OneFrameRateResponseData) extends AnyVal {
+  private[rates] implicit class OneFrameRateResponseDataOps(val oneFrameRateResponseData: OneFrameRateResponseData)
+      extends AnyVal {
     def asRate: Rate =
       Rate(
         Pair(

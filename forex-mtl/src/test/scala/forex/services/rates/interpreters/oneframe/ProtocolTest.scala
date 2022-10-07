@@ -1,5 +1,6 @@
-package forex.repository.oneframe
-import forex.repository.oneframe.Protocol._
+package forex.services.rates.interpreters.oneframe
+
+import forex.services.rates.interpreters.oneframe.Protocol._
 import io.circe.parser
 
 import java.time.OffsetDateTime

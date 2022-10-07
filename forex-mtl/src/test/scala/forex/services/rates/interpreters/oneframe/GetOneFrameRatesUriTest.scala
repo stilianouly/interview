@@ -1,4 +1,4 @@
-package forex.repository.oneframe
+package forex.services.rates.interpreters.oneframe
 
 import forex.domain.Currency
 
