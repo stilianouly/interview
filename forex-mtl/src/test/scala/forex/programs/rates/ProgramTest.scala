@@ -4,6 +4,7 @@ import cats.effect.IO
 import forex.domain.Rate.Pair
 import forex.domain.{Currency, Price, Rate, Timestamp}
 import forex.programs.rates.Protocol.GetRatesRequest
+import forex.programs.rates.errors.Error
 import forex.services.RatesService
 import forex.services.valuecache.{Algebra => CacheAlgebra}
 import org.scalatest.funspec.AnyFunSpec
@@ -34,7 +35,7 @@ class ProgramTest extends AnyFunSpec {
   describe("Program") {
     describe("caching") {
       describe("cache is empty") {
-        it("should get the requested rate from the rates service, then cache the rates") {
+        it("Should get the requested rate from the rates service, then cache the rates") {
 
           val ratesService: RatesService[IO] = _ => IO(Right(rates))
 
@@ -57,7 +58,7 @@ class ProgramTest extends AnyFunSpec {
       }
 
       describe("cache is not empty") {
-        it("should get the requested rate from the cache service, and not call the rates service") {
+        it("Should get the requested rate from the cache service, and not call the rates service") {
 
           var ratesServiceCalled = "no"
 
@@ -82,6 +83,22 @@ class ProgramTest extends AnyFunSpec {
           assert(cachedItemAfterRun == rates)
           assert(ratesServiceCalled == "no")
         }
+      }
+    }
+
+    describe("empty response") {
+      it("Should return an empty response error given OneFrame returns empty data") {
+        val emptyRatesService: RatesService[IO] = _ => IO{Right(Nil)}
+
+        val testCache = new TestCache
+
+        val program = new Program[IO](emptyRatesService, testCache)
+
+        val result = program.get(GetRatesRequest(Currency.AUD, Currency.USD)).unsafeRunSync()
+
+        val expected = Left(Error.ResponseEmpty("Service returned an empty data set."))
+
+        assert(result == expected)
       }
     }
   }

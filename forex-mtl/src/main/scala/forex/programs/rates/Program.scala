@@ -40,6 +40,6 @@ object Program {
   def getRequestedRate[F[_] : Applicative](request: GetRatesRequest, rates: List[Rate]): EitherT[F, Error, Rate] = {
     val maybeRequestedRate = rates.find(rate => request.to == rate.pair.to && request.from == rate.pair.from)
 
-    EitherT.fromOption[F](maybeRequestedRate, Error.ResponseEmpty("Service returned a missing data set"))
+    EitherT.fromOption[F](maybeRequestedRate, Error.ResponseEmpty("Service returned an empty data set."))
   }
 }
