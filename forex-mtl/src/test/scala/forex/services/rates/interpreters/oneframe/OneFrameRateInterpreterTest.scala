@@ -51,7 +51,7 @@ class OneFrameRateInterpreterTest extends AnyFunSpec {
       val response: Response[IO] = Response[IO](body = responseStream)
       val dummyClient = Client[IO](_ => Resource.apply[IO, Response[IO]](IO((response, IO.unit))))
 
-      val dummyAppConfig = ApplicationConfig(HttpConfig("blah", 9090, FiniteDuration.apply(1, TimeUnit.DAYS)), OneFrameConfig("hi", "bye", "123"))
+      val dummyAppConfig = ApplicationConfig(HttpConfig("blah", 9090, FiniteDuration.apply(1, TimeUnit.DAYS)), OneFrameConfig("hi", None, "123"))
 
       val interpreter = new OneFrameRatesInterpreter[IO](dummyClient, dummyAppConfig)
 

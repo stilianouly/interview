@@ -16,7 +16,7 @@ import org.http4s.{Header, Headers, Request}
 class OneFrameRatesInterpreter[F[_] : Sync](client: Client[F], config: ApplicationConfig) extends Algebra[F] {
 
   override def get(pair: Rate.Pair): F[Error Either List[Rate]] ={
-    val oneFrameUri = GetOneFrameRatesUri(config.oneframe.host, config.oneframe.port, pair.from, pair.to)
+    val oneFrameUri = GetOneFrameRatesUri(config.oneframe.host, config.oneframe.port)
 
     val request = Request[F](uri = oneFrameUri, headers = Headers.of(Header("token", config.oneframe.token)))
 

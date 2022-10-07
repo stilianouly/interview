@@ -15,6 +15,6 @@ case class HttpConfig(
 
 case class OneFrameConfig(
     host: String,
-    port: String,
+    port: Option[Int],
     token: String
 )
