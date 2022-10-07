@@ -1,8 +1,9 @@
 package forex.http
 package rates
 
+import cats.data.Validated.{Invalid, Valid}
 import cats.effect.Sync
-import cats.implicits.catsSyntaxApplicativeError
+import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxTuple2Semigroupal}
 import cats.syntax.flatMap._
 import forex.programs.RatesProgram
 import forex.programs.rates.errors.Error.{RateLookupFailed, ResponseEmpty}
@@ -19,14 +20,20 @@ class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
   private[http] val prefixPath = "/rates"
 
   private val httpRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
-    case GET -> Root :? FromQueryParam(from) +& ToQueryParam(to) =>
-      rates.get(RatesProgramProtocol.GetRatesRequest(from, to)).attempt.flatMap {
-        case Left(effectError) => InternalServerError(effectError.getMessage)
-        case Right(domainError) => domainError match {
-          case Left(RateLookupFailed(msg)) => InternalServerError(msg)
-          case Left(ResponseEmpty(msg)) => NotFound(msg)
-          case Right(rate) => Ok(rate)
-        }
+    case GET -> Root :? FromQueryParam(fromInput) +& ToQueryParam(toInput) =>
+
+      val validatedInputs = (fromInput, toInput).mapN((fromCurrency, toCurrency) => (fromCurrency, toCurrency))
+      validatedInputs match {
+        case Valid((from, to)) =>
+          rates.get(RatesProgramProtocol.GetRatesRequest(from, to)).attempt.flatMap {
+            case Left(effectError) => InternalServerError(effectError.getMessage)
+            case Right(domainError) => domainError match {
+              case Left(RateLookupFailed(msg)) => InternalServerError(msg)
+              case Left(ResponseEmpty(msg)) => NotFound(msg)
+              case Right(rate) => Ok(rate)
+            }
+          }
+        case Invalid(e) => BadRequest(e.toList.mkString("\n"))
       }
   }
 

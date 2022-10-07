@@ -8,14 +8,15 @@ object Converters {
 
   private[rates] implicit class OneFrameRateResponseDataOps(val oneFrameRateResponseData: OneFrameRateResponseData)
       extends AnyVal {
-    def asRate: Rate =
-      Rate(
-        Pair(
-          Currency.fromString(oneFrameRateResponseData.from),
-          Currency.fromString(oneFrameRateResponseData.to)
-        ),
+    def asRate: Option[Rate] = {
+      for {
+        from <- Currency.fromString(oneFrameRateResponseData.from)
+        to <- Currency.fromString(oneFrameRateResponseData.to)
+      } yield Rate(
+        Pair(from, to),
         Price(oneFrameRateResponseData.price),
         Timestamp(oneFrameRateResponseData.timestamp)
       )
+    }
   }
 }

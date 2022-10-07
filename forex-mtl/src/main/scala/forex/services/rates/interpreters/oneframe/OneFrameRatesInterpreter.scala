@@ -25,7 +25,12 @@ class OneFrameRatesInterpreter[F[_] : Sync](client: Client[F], config: Applicati
 
     oneFrameResponse.map {
       case Left(_) => Left(Error.OneFrameLookupFailed("Unexpected upstream response from OneFrame service. The rate limit may have been exceeded."))
-      case Right(rates) => Right(rates.map(_.asRate))
+      case Right(rates) => {
+        if (rates.map(_.asRate).contains(None))
+          Left(Error.OneFrameLookupFailed("Unexpected currency response."))
+        else
+          Right(rates.flatMap(_.asRate))
+      }
     }
   }
 

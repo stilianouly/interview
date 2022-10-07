@@ -41,9 +41,31 @@ class OneFrameRateInterpreterTest extends AnyFunSpec {
     |  }
     |]""".stripMargin
 
-  val quoteReachedResponse =
-    """{"error":"Quota reached"}""".stripMargin
+  val unknownCurrencyResponseBody =
+    s"""
+       |[
+       |  {
+       |    "from": "FJD",
+       |    "to": "JPY",
+       |    "bid": 0.6118225421857174,
+       |    "ask": 0.8243869101616611,
+       |    "price": 0.7181047261736893,
+       |    "time_stamp": "$time"
+       |  }
+       |,
+       |
+       |  {
+       |    "from": "USD",
+       |    "to": "JPY",
+       |    "bid": 0.8435259660697864,
+       |    "ask": 0.4175532166907524,
+       |    "price": 0.6305395913802694,
+       |    "time_stamp": "$time"
+       |  }
+       |]""".stripMargin
 
+  val quoteReachedResponseBody =
+    """{"error":"Quota reached"}""".stripMargin
 
   val dummyAppConfig = ApplicationConfig(HttpConfig("blah", 9090, FiniteDuration.apply(1, TimeUnit.DAYS)), OneFrameConfig("hi", None, "123"))
 
@@ -68,9 +90,24 @@ class OneFrameRateInterpreterTest extends AnyFunSpec {
       assert(result === expected)
     }
 
+    it("Should return a lookup error given an unexpected currency") {
+
+      val responseStream: fs2.Stream[IO, Byte] = fs2.Stream(unknownCurrencyResponseBody.getBytes.toIndexedSeq:_*)
+      val response: Response[IO] = Response[IO](body = responseStream)
+      val dummyClient = Client[IO](_ => Resource.apply[IO, Response[IO]](IO((response, IO.unit))))
+
+      val interpreter = new OneFrameRatesInterpreter[IO](dummyClient, dummyAppConfig)
+
+      val result: Either[errors.Error, List[Rate]] = interpreter.get(Pair(Currency.AUD, Currency.USD)).unsafeRunSync()
+
+      val expected = Left(OneFrameLookupFailed("Unexpected currency response."))
+
+      assert(result === expected)
+    }
+
     it("Should return a lookup error given an unexpected response") {
 
-      val responseStream: fs2.Stream[IO, Byte] = fs2.Stream(quoteReachedResponse.getBytes.toIndexedSeq:_*)
+      val responseStream: fs2.Stream[IO, Byte] = fs2.Stream(quoteReachedResponseBody.getBytes.toIndexedSeq:_*)
       val response: Response[IO] = Response[IO](body = responseStream)
       val dummyClient = Client[IO](_ => Resource.apply[IO, Response[IO]](IO((response, IO.unit))))
 
