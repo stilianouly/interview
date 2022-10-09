@@ -4,6 +4,7 @@ import forex.domain.Currency
 import forex.domain.Currency._
 import org.http4s.Uri
 import cats.implicits.toShow
+import org.http4s.Uri.RegName
 
 object GetOneFrameRatesUri {
 
@@ -12,13 +13,12 @@ object GetOneFrameRatesUri {
     allCurrencies.flatMap(currency1 => allCurrencies.map(currency2 => (currency1, currency2)))
   }
 
-  private val pairParamsAsString = {
-    allCurrenciesPaired.map(currencyPair => s"pair=${currencyPair._1.show}${currencyPair._2.show}").mkString("&")
-  }
-
   def apply(host: String, maybePort: Option[Int]): Uri = {
-    val port = maybePort.map(":" + _.toString).getOrElse("")
+    val uri =
+      new Uri(Some(Uri.Scheme.http), Some(Uri.Authority(host = RegName(host), port = maybePort)), path = "/rates")
 
-    Uri.unsafeFromString(s"$host$port/rates?$pairParamsAsString")
+    uri.withQueryParam("pair", allCurrenciesPaired.map {
+      case (currencyA, currencyB) => s"${currencyA.show}${currencyB.show}"
+    })
   }
 }
