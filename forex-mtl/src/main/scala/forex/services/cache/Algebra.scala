@@ -1,4 +1,4 @@
-package forex.services.valuecache
+package forex.services.cache
 
 trait Algebra[F[_], O] {
 

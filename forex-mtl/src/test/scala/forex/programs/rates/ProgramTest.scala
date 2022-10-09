@@ -6,7 +6,7 @@ import forex.domain.{Currency, Price, Rate, Timestamp}
 import forex.programs.rates.Protocol.GetRatesRequest
 import forex.programs.rates.errors.Error
 import forex.services.RatesService
-import forex.services.valuecache.{Algebra => CacheAlgebra}
+import forex.services.cache.{Algebra => CacheAlgebra}
 import org.scalatest.funspec.AnyFunSpec
 
 import java.time.OffsetDateTime

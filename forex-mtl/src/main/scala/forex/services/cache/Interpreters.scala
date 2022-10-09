@@ -1,18 +1,18 @@
-package forex.services.valuecache
+package forex.services.cache
 
 import cats.effect.Sync
 import com.google.common.cache.CacheBuilder
-import forex.services.valuecache.interpreters.guava.GuavaValueCacheInterpreter
+import forex.services.cache.interpreters.guava.GuavaCacheInterpreter
 import scalacache._
 import scalacache.guava._
 
 import scala.concurrent.duration.Duration
 
 object Interpreters {
-  def guavaValueCacheInterpreter[F[_] : Sync, O](duration: Duration): Algebra[F, O] = {
+  def guavaCacheInterpreter[F[_] : Sync, O](duration: Duration): Algebra[F, O] = {
     val underlyingGuavaCache = CacheBuilder.newBuilder().maximumSize(10000L).build[String, Entry[O]]
     val guavaCache = GuavaCache(underlyingGuavaCache)
 
-    new GuavaValueCacheInterpreter[F, O](guavaCache, duration)
+    new GuavaCacheInterpreter[F, O](guavaCache, duration)
   }
 }

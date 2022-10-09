@@ -18,9 +18,9 @@ class Module[F[_]: Concurrent: Timer](config: ApplicationConfig, client: Client[
 
   private val ratesService: RatesService[F] = RatesServices.oneFrameRateInterpreter[F](client, config)
 
-  private val ratesValueCacheService: ValueCacheService[F, List[Rate]] = ValueCacheServices.guavaValueCacheInterpreter[F, List[Rate]](Duration.apply(4.5, TimeUnit.MINUTES))
+  private val ratesCacheService: CacheService[F, List[Rate]] = CacheServices.guavaCacheInterpreter[F, List[Rate]](Duration.apply(4.5, TimeUnit.MINUTES))
 
-  private val ratesProgram: RatesProgram[F] = RatesProgram[F](ratesService, ratesValueCacheService)
+  private val ratesProgram: RatesProgram[F] = RatesProgram[F](ratesService, ratesCacheService)
 
   private val ratesHttpRoutes: HttpRoutes[F] = new RatesHttpRoutes[F](ratesProgram).routes
 

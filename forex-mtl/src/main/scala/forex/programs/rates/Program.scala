@@ -7,11 +7,11 @@ import forex.programs.rates.Program.getRequestedRate
 import forex.programs.rates.Protocol.GetRatesRequest
 import forex.programs.rates.errors._
 import forex.services.rates.errors.{Error => ServiceError}
-import forex.services.{RatesService, ValueCacheService}
+import forex.services.{RatesService, CacheService}
 
 class Program[F[_]: Monad](
     ratesService: RatesService[F],
-    valueCacheService: ValueCacheService[F, List[Rate]]
+    valueCacheService: CacheService[F, List[Rate]]
 ) extends Algebra[F] {
 
   final private val key = "rates"
@@ -27,7 +27,7 @@ class Program[F[_]: Monad](
 object Program {
   def apply[F[_] : Monad](
       ratesService: RatesService[F],
-      valueCacheService: ValueCacheService[F, List[Rate]]
+      valueCacheService: CacheService[F, List[Rate]]
   ): Algebra[F] = new Program[F](ratesService, valueCacheService)
 
   def getRequestedRate[F[_] : Applicative](request: GetRatesRequest, rates: List[Rate]): EitherT[F, Error, Rate] = {

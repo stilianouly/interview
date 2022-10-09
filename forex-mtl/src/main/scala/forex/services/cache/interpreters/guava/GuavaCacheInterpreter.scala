@@ -1,16 +1,16 @@
-package forex.services.valuecache.interpreters.guava
+package forex.services.cache.interpreters.guava
 
 import cats._
 import cats.data.EitherT
 import cats.effect.Sync
-import forex.services.valuecache.Algebra
+import forex.services.cache.Algebra
 import scalacache.guava._
 import scalacache.modes.sync._
 import cats.syntax.all._
 
 import scala.concurrent.duration.Duration
 
-class GuavaValueCacheInterpreter[F[_] : Sync, O](guavaCache: GuavaCache[O], duration: Duration) extends Algebra[F, O] {
+class GuavaCacheInterpreter[F[_] : Sync, O](guavaCache: GuavaCache[O], duration: Duration) extends Algebra[F, O] {
 
   def getOrSet[A](key: String, fetchValue: F[A Either O]): F[A Either O] = {
     guavaCache.get(key) match {
