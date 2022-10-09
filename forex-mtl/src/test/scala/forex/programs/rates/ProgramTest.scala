@@ -12,11 +12,9 @@ import org.scalatest.funspec.AnyFunSpec
 import java.time.OffsetDateTime
 
 class TestCache() extends CacheAlgebra[IO, List[Rate]] {
-  var cachedItem: List[Rate] = null
 
-  override def cache(value: List[Rate]): IO[Any] = IO{ cachedItem = value }
-
-  override def get: IO[Option[List[Rate]]] = IO(Option(cachedItem))
+  override def getOrSet[A](key: String, fetchValue: IO[Either[A, List[Rate]]]): IO[Either[A, List[Rate]]] =
+    fetchValue
 }
 
 class ProgramTest extends AnyFunSpec {
@@ -33,73 +31,41 @@ class ProgramTest extends AnyFunSpec {
   val rates = List(rate1, rate2, rate3, rate4, rate5, rate6)
 
   describe("Program") {
-    describe("caching") {
-      describe("cache is empty") {
-        it("Should get the requested rate from the rates service, then cache the rates") {
+    it("Should get the requested rate from the rates service, then cache the rates") {
 
-          val ratesService: RatesService[IO] = _ => IO(Right(rates))
+      val ratesService: RatesService[IO] = _ => IO(Right(rates))
 
-          val testCache = new TestCache
+      var didSetCache = false
 
-          val program = new Program[IO](ratesService, testCache)
-
-          val cachedItemBeforeRun = testCache.cachedItem
-
-          val result = program.get(GetRatesRequest(Currency.AUD, Currency.USD)).unsafeRunSync()
-
-          val cachedItemAfterRun = testCache.cachedItem
-
-          val expected = Right(rate1)
-
-          assert(result == expected)
-          assert(cachedItemBeforeRun == null)
-          assert(cachedItemAfterRun == rates)
+      val testCache: CacheAlgebra[IO, List[Rate]] = new CacheAlgebra[IO, List[Rate]] {
+        def getOrSet[A](key: String, fetchValue: IO[Either[A, List[Rate]]]): IO[Either[A, List[Rate]]] = {
+          didSetCache = true
+          fetchValue
         }
       }
 
-      describe("cache is not empty") {
-        it("Should get the requested rate from the cache service, and not call the rates service") {
+      val program = new Program[IO](ratesService, testCache)
 
-          var ratesServiceCalled = "no"
+      val result = program.get(GetRatesRequest(Currency.AUD, Currency.USD)).unsafeRunSync()
 
-          val emptyRatesService: RatesService[IO] = _ => IO{ratesServiceCalled = "yes"; Right(Nil)}
+      val expected = Right(rate1)
 
-          val testCache = new TestCache
-
-          testCache.cachedItem = rates
-
-          val program = new Program[IO](emptyRatesService, testCache)
-
-          val cachedItemBeforeRun = testCache.cachedItem
-
-          val result = program.get(GetRatesRequest(Currency.AUD, Currency.USD)).unsafeRunSync()
-
-          val cachedItemAfterRun = testCache.cachedItem
-
-          val expected = Right(rate1)
-
-          assert(result == expected)
-          assert(cachedItemBeforeRun == rates)
-          assert(cachedItemAfterRun == rates)
-          assert(ratesServiceCalled == "no")
-        }
-      }
+      assert(result == expected)
+      assert(didSetCache)
     }
 
-    describe("empty response") {
-      it("Should return an empty response error given OneFrame returns empty data") {
-        val emptyRatesService: RatesService[IO] = _ => IO{Right(Nil)}
+    it("Should return an empty response error given OneFrame returns empty data") {
+      val emptyRatesService: RatesService[IO] = _ => IO { Right(Nil) }
 
-        val testCache = new TestCache
+      val testCache = new TestCache
 
-        val program = new Program[IO](emptyRatesService, testCache)
+      val program = new Program[IO](emptyRatesService, testCache)
 
-        val result = program.get(GetRatesRequest(Currency.AUD, Currency.USD)).unsafeRunSync()
+      val result = program.get(GetRatesRequest(Currency.AUD, Currency.USD)).unsafeRunSync()
 
-        val expected = Left(Error.ResponseEmpty("Service returned an empty data set."))
+      val expected = Left(Error.ResponseEmpty("Service returned an empty data set."))
 
-        assert(result == expected)
-      }
+      assert(result == expected)
     }
   }
 }

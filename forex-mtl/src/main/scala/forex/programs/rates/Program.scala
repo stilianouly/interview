@@ -1,7 +1,6 @@
 package forex.programs.rates
 
 import cats.data.EitherT
-import cats.implicits.{catsSyntaxApplicativeId, toFlatMapOps, toFunctorOps}
 import cats.{Applicative, Monad}
 import forex.domain._
 import forex.programs.rates.Program.getRequestedRate
@@ -15,19 +14,13 @@ class Program[F[_]: Monad](
     valueCacheService: ValueCacheService[F, List[Rate]]
 ) extends Algebra[F] {
 
+  final private val key = "rates"
+
   override def get(request: Protocol.GetRatesRequest): F[Error Either Rate] = {
+    val errorOrRatesEffect: F[Either[ServiceError, List[Rate]]] =
+      valueCacheService.getOrSet(key, ratesService.get(Rate.Pair(request.from, request.to)))
 
-    val errorOrRatesProgram: F[Either[ServiceError, List[Rate]]] = valueCacheService.get.flatMap {
-      case Some(cachedRates) => Monad[F].pure(Right(cachedRates))
-      case None => {
-        ratesService.get(Rate.Pair(request.from, request.to)).flatMap {
-          case Right(ratesFromService) => valueCacheService.cache(ratesFromService).map(_ => Right(ratesFromService))
-          case error => error.pure[F]
-        }
-      }
-    }
-
-    EitherT(errorOrRatesProgram).leftMap(toProgramError).flatMap(rates => getRequestedRate(request, rates)).value
+    EitherT(errorOrRatesEffect).leftMap(toProgramError).flatMap(rates => getRequestedRate(request, rates)).value
   }
 }
 
